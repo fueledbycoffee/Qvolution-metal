@@ -7,6 +7,7 @@
 #import <Foundation/Foundation.h>
 
 #import <Metal/MTLDefines.h>
+#import <Metal/MTLCounters.h>
 #import <Metal/MTLResource.h>
 
 @protocol MTLCounterSet;

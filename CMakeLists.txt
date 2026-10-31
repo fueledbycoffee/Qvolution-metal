@@ -104,6 +104,7 @@ add_framework(Metal
 		src/Metal/MTLComputeCommandEncoder.mm
 		src/Metal/MTLComputePipeline.mm
 		src/Metal/MTLCounterSampleBuffer.mm
+		src/Metal/MTLCounters.mm
 		src/Metal/MTLDepthStencilDescriptor.mm
 		src/Metal/MTLDevice.mm
 		src/Metal/MTLDrawable.mm
