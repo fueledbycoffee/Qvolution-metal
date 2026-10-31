@@ -8,6 +8,7 @@
 #import <Metal/MTLComputePipeline.h>
 #import <Metal/MTLDefines.h>
 #import <Metal/MTLTypes.h>
+#import <Metal/MTLCounterSampleBuffer.h>
 
 METAL_DECLARATIONS_BEGIN
 
@@ -20,9 +21,6 @@ METAL_DECLARATIONS_BEGIN
 @class MTLComputePassDescriptor;
 @class MTLComputePassSampleBufferAttachmentDescriptorArray;
 @class MTLComputePassSampleBufferAttachmentDescriptor;
-
-// TODO: check what the actual value is
-#define MTLCounterDontSample 0
 
 MTL_EXPORT
 @interface MTLComputePassSampleBufferAttachmentDescriptor : NSObject <NSCopying>

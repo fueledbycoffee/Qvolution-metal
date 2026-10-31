@@ -14,6 +14,15 @@
 
 #if DARLING_METAL_ENABLED
 
+- (instancetype)init
+{
+	if ((self = [super init])) {
+		_startOfEncoderSampleIndex = MTLCounterDontSample;
+		_endOfEncoderSampleIndex = MTLCounterDontSample;
+	}
+	return self;
+}
+
 - (id)copyWithZone: (NSZone*)zone
 {
 	MTLComputePassSampleBufferAttachmentDescriptor* copy = [[MTLComputePassSampleBufferAttachmentDescriptor alloc] init];

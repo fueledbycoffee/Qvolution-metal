@@ -11,6 +11,8 @@
 
 @protocol MTLCounterSet;
 
+#define MTLCounterDontSample NSUIntegerMax
+
 /**
  * Describes a counter sample buffer to allocate.
  *
