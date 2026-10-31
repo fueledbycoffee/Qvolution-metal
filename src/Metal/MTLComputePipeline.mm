@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
 #import <Metal/MTLComputePipelineInternal.h>
+#import <Metal/MTLStageInputOutputDescriptorInternal.h>
 #import <Metal/MTLPipelineInternal.h>
 #import <Metal/MTLLibraryInternal.h>
 #import <Metal/MTLTypesInternal.h>
@@ -123,11 +124,11 @@ MTL_UNSUPPORTED_CLASS
 - (Indium::ComputePipelineDescriptor)asIndiumDescriptor
 {
 	return Indium::ComputePipelineDescriptor {
-		((MTLFunctionInternal*)_computeFunction).function,
+		_computeFunction ? ((MTLFunctionInternal*)_computeFunction).function : nullptr,
 		static_cast<bool>(_threadGroupSizeIsMultipleOfThreadExecutionWidth),
 		_maxTotalThreadsPerThreadgroup,
 		_maxCallStackDepth,
-		std::nullopt, // TODO
+		_stageInputDescriptor ? std::make_optional([_stageInputDescriptor asIndiumDescriptor]) : std::nullopt,
 		{}, // TODO
 		static_cast<bool>(_supportIndirectCommandBuffers),
 		{}, // TODO

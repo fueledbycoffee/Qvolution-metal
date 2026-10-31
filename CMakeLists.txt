@@ -119,6 +119,7 @@ add_framework(Metal
 		src/Metal/MTLSamplerDescriptor.mm
 		src/Metal/MTLSamplerState.mm
 		src/Metal/MTLSharedEvent.mm
+		src/Metal/MTLStageInputOutputDescriptor.mm
 		src/Metal/MTLStencilDescriptor.mm
 		src/Metal/MTLTexture.mm
 		src/Metal/MTLTextureDescriptor.mm

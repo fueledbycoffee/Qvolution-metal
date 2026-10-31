@@ -38,6 +38,7 @@
 #import <Metal/MTLSamplerState.h>
 #import <Metal/MTLSharedEvent.h>
 #import <Metal/MTLStencilDescriptor.h>
+#import <Metal/MTLStageInputOutputDescriptor.h>
 #import <Metal/MTLTexture.h>
 #import <Metal/MTLTextureDescriptor.h>
 #import <Metal/MTLTileRenderPipeline.h>
