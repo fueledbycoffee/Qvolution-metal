@@ -113,3 +113,56 @@ https://docs.vulkan.org/refpages/latest/refpages/source/VkPhysicalDeviceLimits.h
 https://docs.vulkan.org/refpages/latest/refpages/source/vkCmdWriteTimestamp.html
 https://docs.vulkan.org/refpages/latest/refpages/source/vkGetQueryPoolResults.html
 https://docs.vulkan.org/refpages/latest/refpages/source/VK_KHR_performance_query.html
+
+Behavior-based immutability regression:
+
+The original model-v2 fixture used !isKindOfClass:NSMutableString as an
+immutability oracle. Root's Stage35 model run exited134 at that assertion before
+completing the first identifier; the executable, source and failure record remain
+frozen. That assertion is invalid for a class cluster, as Apple's NSObjectProtocol
+isKindOfClass: documentation warns. NSString documents immutable content rather
+than a particular concrete subclass hierarchy:
+https://developer.apple.com/documentation/objectivec/nsobjectprotocol/iskind(of:)?language=objc
+https://developer.apple.com/documentation/foundation/nsstring
+
+Owned source explains the actual class result: Foundation's
+src/NSPlatform_Apportable.m changes __NSCFString's superclass to NSMutableString.
+NSStringInternal.h derives __NSCFConstantString from __NSCFString, and
+CoreFoundation's NSConstantString.m defers its class-membership check to super.
+This is evidence about this implementation, not Apple's private class hierarchy.
+CoreFoundation's NSString.m instead checks mutable flags before mutation; its
+append path rejects an immutable string through checked replacement. Source
+inspection explains the rejected inference but does not establish runtime
+immutability on its own.
+
+metal-string-immutability.m is a separate Foundation-only preflight with one
+unique executable-owned literal, an independent NSData byte snapshot and key/hash
+baseline. It attempts append, set and replacement under exception handling, and
+requires rejection plus unchanged literal content/hash/key lookup. Positive
+mutableCopy controls must really change independently, proving the mutation calls
+work on owned mutable strings. Concrete class information is diagnostic only.
+
+The model-v3 common identifier fixture uses the same helpers. Before attempting
+mutations, it snapshots all18 exported pointers, independent UTF-8 NSData values,
+hashes and independently reconstructed dictionary keys. Every attempted mutation
+must reject explicitly and leave every original pointer/value/hash/key lookup
+intact. Mutable copies must change while the original remains intact. This
+replaces the invalid membership inference with direct behavioral proof, rather
+than weakening immutability requirements. The helper accepts this runtime's
+NSInvalidArgumentException/NSInternalInconsistencyException rejection paths; it
+does not assert Apple's exception names for deliberately invalid mutation calls.
+
+Run the isolated literal preflight before the identifier model. The model's new
+identifier literals are defined in the authored executable object during this
+investigation, rather than inserted into a shared installed framework. These
+casts/mutation attempts are confined to the authored boundary tests; production
+code must not infer permission to mutate from class membership. Root owns both
+actual executions, then normal integrated-framework export/behavior acceptance.
+
+Measured root-owned Stage36 boundary controls (2026-10-31): the isolated literal
+preflight passed all three rejection and positive mutable-copy checks, exit0.
+The identifier model-v3 passed all18 pointer/byte/hash/key integrity checks and
+positive mutable-copy controls, exit0. Both prefixes shut down with exact exit0.
+Original model-v2's failed class assertion remains frozen. These are authored
+model observations; normal installed-framework strong linking and the unchanged
+vendor-app retry remain separate coordinator gates after integration.

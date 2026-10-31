@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: MPL-2.0
 #import <Foundation/Foundation.h>
 #import <Metal/Metal.h>
+#import "metal-string-immutability.h"
 #include <assert.h>
 #include <stdio.h>
 #ifdef NDEBUG
@@ -61,16 +62,23 @@ int main(void) {
         assert(NSClassFromString(@"MTLBlitPassDescriptor") != Nil);
         NSMutableSet* distinct=[NSMutableSet set];
         NSMutableDictionary* lookup=[NSMutableDictionary dictionary];
+        NSMutableArray* originals=[NSMutableArray array];
+        NSMutableArray* originalHashes=[NSMutableArray array];
+        NSMutableArray* equalValues=[NSMutableArray array];
+        NSString* originalPointers[sizeof(identifiers)/sizeof(identifiers[0])];
         for (NSUInteger i=0; i<sizeof(identifiers)/sizeof(identifiers[0]); ++i) {
             const struct Identifier entry=identifiers[i];
             if (entry.address == NULL) { printf("FAIL missing %s\n", entry.symbol); return 1; }
             NSString* value=*entry.address;
             assert([value isKindOfClass:[NSString class]] && value.length > 0);
-            assert(![value isKindOfClass:[NSMutableString class]]);
+            originalPointers[i]=value;
+            [originals addObject:snapshotStringBytes(value)];
+            [originalHashes addObject:@(value.hash)];
             NSString* copy=[value copy];
             assert([copy isEqualToString:value] && copy.hash == value.hash);
             NSString* independent=[[[NSString alloc] initWithUTF8String:value.UTF8String] autorelease];
             assert([independent isEqualToString:value] && independent.hash == value.hash);
+            [equalValues addObject:independent];
             [lookup setObject:@(i) forKey:value];
             NSNumber* found=[lookup objectForKey:independent];
             assert(found != nil && found.unsignedIntegerValue == i);
@@ -79,7 +87,22 @@ int main(void) {
         }
         // Opaque project identifiers are distinct; this does not assert native raw strings.
         assert(distinct.count == sizeof(identifiers)/sizeof(identifiers[0]));
-        puts("PASS: 18 immutable common counter identifiers, equality, hash and collection keys");
+        for (NSUInteger operation=0;operation<3;++operation) {
+            for (NSUInteger i=0;i<sizeof(identifiers)/sizeof(identifiers[0]);++i) {
+                NSString* value=*identifiers[i].address;
+                assertMutableCopyChanges(value,operation);
+                assert(rejectsStringMutation(value,operation));
+                for (NSUInteger j=0;j<sizeof(identifiers)/sizeof(identifiers[0]);++j) {
+                    NSString* original=*identifiers[j].address;
+                    assert(original==originalPointers[j]);
+                    assert([snapshotStringBytes(original) isEqualToData:[originals objectAtIndex:j]]);
+                    assert(original.hash==[[originalHashes objectAtIndex:j] unsignedIntegerValue]);
+                    NSNumber* found=[lookup objectForKey:[equalValues objectAtIndex:j]];
+                    assert(found != nil && found.unsignedIntegerValue==j);
+                }
+            }
+        }
+        puts("PASS: 18 immutable identifiers reject mutation; bytes/hash/keys and mutable copies verified");
     }
     return 0;
 }
