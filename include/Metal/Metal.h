@@ -11,6 +11,7 @@
 #import <Metal/MTLBuffer.h>
 #import <Metal/MTLArgumentDescriptor.h>
 #import <Metal/MTLBlitCommandEncoder.h>
+#import <Metal/MTLBlitPass.h>
 #import <Metal/MTLCaptureManager.h>
 #import <Metal/MTLCommandBuffer.h>
 #import <Metal/MTLCommandEncoder.h>

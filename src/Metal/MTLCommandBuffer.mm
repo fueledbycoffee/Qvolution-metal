@@ -3,6 +3,7 @@
 
 #import <Metal/MTLCommandBufferInternal.h>
 #import <Metal/MTLBlitCommandEncoderInternal.h>
+#import <Metal/MTLBlitPassInternal.h>
 #import <Metal/MTLComputeCommandEncoderInternal.h>
 #import <Metal/MTLDevice.h>
 #import <Metal/MTLCommandQueue.h>
@@ -118,6 +119,17 @@ struct MTLCommandBufferHandlerWrapper {
 - (id<MTLBlitCommandEncoder>)blitCommandEncoder
 {
 	auto encoder = _commandBuffer->blitCommandEncoder();
+	if (!encoder) {
+		return nil;
+	}
+	return [[[MTLBlitCommandEncoderInternal alloc] initWithEncoder: encoder device: _device] autorelease];
+}
+
+- (id<MTLBlitCommandEncoder>)blitCommandEncoderWithDescriptor: (MTLBlitPassDescriptor*)blitPassDescriptor
+{
+	if (![blitPassDescriptor isKindOfClass:[MTLBlitPassDescriptor class]])
+		[NSException raise:NSInvalidArgumentException format:@"Expected a Metal blit pass descriptor"];
+	auto encoder = _commandBuffer->blitCommandEncoder([blitPassDescriptor asIndiumDescriptor]);
 	if (!encoder) {
 		return nil;
 	}

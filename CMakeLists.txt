@@ -94,6 +94,7 @@ add_framework(Metal
 		src/Metal/MTLArgumentDescriptor.mm
 		src/Metal/MTLBinaryArchive.mm
 		src/Metal/MTLBlitCommandEncoder.mm
+		src/Metal/MTLBlitPass.mm
 		src/Metal/MTLBuffer.mm
 		src/Metal/MTLCaptureManager.mm
 		src/Metal/MTLCommandBuffer.mm

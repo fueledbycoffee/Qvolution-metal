@@ -19,6 +19,7 @@ METAL_DECLARATIONS_BEGIN
 @protocol MTLRenderCommandEncoder;
 
 @class MTLComputePassDescriptor;
+@class MTLBlitPassDescriptor;
 @class MTLRenderPassDescriptor;
 
 typedef NS_ENUM(NSUInteger, MTLDispatchType) {
@@ -68,6 +69,7 @@ MTL_EXPORT
 - (id<MTLRenderCommandEncoder>)renderCommandEncoderWithDescriptor: (MTLRenderPassDescriptor*)renderPassDescriptor;
 
 - (id<MTLBlitCommandEncoder>)blitCommandEncoder;
+- (id<MTLBlitCommandEncoder>)blitCommandEncoderWithDescriptor: (MTLBlitPassDescriptor*)blitPassDescriptor;
 
 - (void)addScheduledHandler: (MTLCommandBufferHandler)block;
 - (void)waitUntilScheduled;
