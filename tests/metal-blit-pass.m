@@ -68,16 +68,38 @@ int main(void) {
         @try { [pass.sampleBufferAttachments setObject:(id)@"wrong" atIndexedSubscript:1]; }
         @catch (NSException *exception) { wrong=[exception.name isEqualToString:NSInvalidArgumentException]; }
         assert(wrong);
+        id<BlitAttachmentShape> slotTwo=[[pass.sampleBufferAttachments objectAtIndexedSubscript:2] retain];
+        id<BlitAttachmentShape> slotOne=[[pass.sampleBufferAttachments objectAtIndexedSubscript:1] retain];
         id<BlitAttachmentShape> assigned=[(id)NSClassFromString(@"MTLBlitPassSampleBufferAttachmentDescriptor") new];
-        assigned.startOfEncoderSampleIndex=13;
-        [pass.sampleBufferAttachments setObject:assigned atIndexedSubscript:2]; [assigned release];
-        assert([pass.sampleBufferAttachments objectAtIndexedSubscript:2].startOfEncoderSampleIndex == 13);
+        id assignedBuffer=[[OwnedBuffer alloc] init];
+        assigned.sampleBuffer=assignedBuffer; [assignedBuffer release];
+        assigned.startOfEncoderSampleIndex=13; assigned.endOfEncoderSampleIndex=21;
+        [pass.sampleBufferAttachments setObject:assigned atIndexedSubscript:2];
+        assigned.startOfEncoderSampleIndex=14; assigned.endOfEncoderSampleIndex=22;
+        id<BlitAttachmentShape> observedTwo=[pass.sampleBufferAttachments objectAtIndexedSubscript:2];
+        assert(observedTwo.startOfEncoderSampleIndex == 13 && observedTwo.endOfEncoderSampleIndex == 21);
+        assert(observedTwo == slotTwo && slotTwo != assigned && slotTwo.sampleBuffer == assignedBuffer);
+        [pass.sampleBufferAttachments setObject:assigned atIndexedSubscript:1];
+        assert([pass.sampleBufferAttachments objectAtIndexedSubscript:1] == slotOne);
+        assert(slotOne != assigned && slotOne != slotTwo && slotOne.sampleBuffer == assignedBuffer);
+        assigned.startOfEncoderSampleIndex=99; assigned.endOfEncoderSampleIndex=100; assigned.sampleBuffer=nil;
+        assert(slotTwo.startOfEncoderSampleIndex == 13 && slotTwo.endOfEncoderSampleIndex == 21);
+        assert(slotOne.startOfEncoderSampleIndex == 14 && slotOne.endOfEncoderSampleIndex == 22);
+        slotTwo.startOfEncoderSampleIndex=37;
+        assert(assigned.startOfEncoderSampleIndex == 99 && slotOne.startOfEncoderSampleIndex == 14);
+        slotOne.sampleBuffer=nil; [assigned release]; assert(destroyed == 0);
+        assert(slotTwo.sampleBuffer == assignedBuffer);
+        [pass.sampleBufferAttachments setObject:slotTwo atIndexedSubscript:2];
+        assert(slotTwo.startOfEncoderSampleIndex == 37 && slotTwo.sampleBuffer == assignedBuffer);
         [pass.sampleBufferAttachments setObject:nil atIndexedSubscript:2];
-        assert([pass.sampleBufferAttachments objectAtIndexedSubscript:2].sampleBuffer == nil);
-        [copy release]; assert(destroyed == 0);
+        assert([pass.sampleBufferAttachments objectAtIndexedSubscript:2] == slotTwo);
+        assert(slotTwo.sampleBuffer == nil && slotTwo.startOfEncoderSampleIndex == MTLCounterDontSample);
+        assert(slotTwo.endOfEncoderSampleIndex == MTLCounterDontSample && destroyed == 1);
+        [slotOne release]; [slotTwo release];
+        [copy release]; assert(destroyed == 1);
         [attachmentCopy release];
         }
-        assert(destroyed == 1);
+        assert(destroyed == 2);
         puts("PASS: blit-pass configuration, retained resources, independent copies and bounds");
     }
     return 0;

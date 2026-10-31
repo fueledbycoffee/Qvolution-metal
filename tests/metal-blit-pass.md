@@ -4,8 +4,8 @@ metal-blit-pass.m is a typed public API fixture that links against the real Meta
 library. Its protocol declarations permit the same source to compile before the
 new classes exist. It first confirms the existing MTLCommandBufferDescriptor,
 then checks all three new classes, retained sample-buffer ownership, typed slot
-assignment, independent copies, nil clearing and bounds. Use -UNDEBUG. No device
-is requested. This is descriptor evidence, not proof of GPU work.
+assignment isolation, independent copies, nil clearing and bounds. Use -UNDEBUG.
+No device is requested. This is descriptor evidence, not proof of GPU work.
 
 metal-blit-pass-conversion.mm also includes Metal's private headers and existing
 Indium include dependencies with DARLING_METAL_ENABLED=1. It verifies empty
@@ -42,10 +42,18 @@ Contracts and policies:
   https://developer.apple.com/documentation/metal/mtlcommandbuffer/makeblitcommandencoder(descriptor:)
   The sample buffer's nil default disables sampling. CounterDontSample's numeric
   contract and the conservative default-index policy are in metal-counter-dont-sample.md.
-- GUESS/project policy (rung 6): four lazy slots (indices 0..3), retain assigned
-  children, deep-copy children, reset a slot on nil, NSRangeException for invalid
-  indices and NSInvalidArgumentException for wrong descriptor types. The fetched
-  public documentation does not specify the slot limit or native exceptions.
+- Rung 3 array setter contract: copy the supplied descriptor's properties into
+  an array-owned instance. This implementation preserves destination identity,
+  isolates subsequent source and duplicate-slot mutations, and retains the shared
+  sample buffer resource. The array page also specifies capacity of at least the
+  device's counterSets count:
+  https://developer.apple.com/documentation/metal/mtlblitpasssamplebufferattachmentdescriptorarray?changes=lat__6&language=objc
+- GUESS/project policy (rung 6): four lazy slots (indices 0..3) are a limit of this
+  implementation's currently unsupported/no-counter backend, not a native size.
+  A future counter-capable backend must size its array for the actual counter-set
+  count. Deep copies, stable destination identity, nil resetting its properties,
+  NSRangeException for invalid indices and NSInvalidArgumentException for wrong
+  types are explicit policies where the primary contract does not specify them.
   Any assigned sample buffer is rejected at the backend boundary, including one
   with both indices set to DontSample. Nothing is silently dropped from an active
   sampling request. Numeric index values round-trip unchanged.
@@ -58,6 +66,8 @@ Counter sampling implementation roadmap (owner: Metal/Indium maintainers):
 2. Implement owned Indium query pools and MTLCounterSampleBuffer allocation with
    device identity, storage mode, sample-count/bounds validation and allocation
    errors; map the real buffer to the public protocol and descriptor bridge.
+   Replace the current no-counter four-slot limit with capacity derived from the
+   real supported counter sets, meeting the public array's minimum capacity.
 3. Encode query reset, start/end samples and synchronization for each supported
    boundary. Handle DontSample separately from valid index zero; retain resources
    until submission completes and propagate command-buffer errors.

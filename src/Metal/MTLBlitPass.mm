@@ -4,7 +4,8 @@
 
 #if __LP64__
 
-// Conservative compatibility policy; the public documentation does not state a limit.
+// Limited to the current backend, which exposes no counter sets or sampling.
+// A sampling backend must provide at least device.counterSets.count slots.
 static const NSUInteger MTLBlitSampleAttachmentCount = 4;
 
 static void checkAttachmentIndex(NSUInteger index)
@@ -73,9 +74,10 @@ static void checkAttachmentIndex(NSUInteger index)
 	checkAttachmentIndex(index);
 	if (attachment != nil && ![attachment isKindOfClass:[MTLBlitPassSampleBufferAttachmentDescriptor class]])
 		[NSException raise:NSInvalidArgumentException format:@"Expected a Metal blit sample attachment descriptor"];
-	[attachment retain];
-	[_attachments[index] release];
-	_attachments[index] = attachment;
+	MTLBlitPassSampleBufferAttachmentDescriptor* target = [self objectAtIndexedSubscript:index];
+	target.sampleBuffer = attachment.sampleBuffer;
+	target.startOfEncoderSampleIndex = attachment != nil ? attachment.startOfEncoderSampleIndex : MTLCounterDontSample;
+	target.endOfEncoderSampleIndex = attachment != nil ? attachment.endOfEncoderSampleIndex : MTLCounterDontSample;
 }
 
 - (id)copyWithZone:(NSZone*)zone
