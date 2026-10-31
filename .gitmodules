@@ -3,7 +3,7 @@
 
 [submodule "deps/indium"]
 	path = deps/indium
-	url = ../indium.git
+	url = https://github.com/VibeDarling/indium.git
 [submodule "deps/mslc"]
 	path = deps/mslc
-	url = ../mslc.git
+	url = https://github.com/VibeDarling/mslc.git
