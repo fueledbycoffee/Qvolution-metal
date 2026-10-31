@@ -16,6 +16,7 @@
 #import <Metal/MTLSamplerStateInternal.h>
 #import <Metal/MTLDepthStencilDescriptorInternal.h>
 #import <Metal/MTLMSLReflection.h>
+#import <Metal/MTLCounterSampleBufferInternal.h>
 
 #include <mslc/mslc.h>
 
@@ -337,6 +338,58 @@ void MTLRemoveDeviceObserver(id<NSObject> observer) {
 		_implicitQueue = [[MTLCommandQueueInternal alloc] initWithQueue: queue device: self];
 	}
 	return _implicitQueue;
+}
+
+- (NSArray<id<MTLCounterSet>>*)counterSets
+{
+#if __LP64__
+	if (_device->timestampCapabilities().supported())
+		return @[[[[MTLTimestampCounterSetInternal alloc] initWithDevice:self] autorelease]];
+#endif
+	return @[];
+}
+
+- (BOOL)supportsCounterSampling:(MTLCounterSamplingPoint)point
+{
+#if __LP64__
+	return point == MTLCounterSamplingPointAtBlitBoundary && _device->timestampCapabilities().supported();
+#else
+	return NO;
+#endif
+}
+
+- (id<MTLCounterSampleBuffer>)newCounterSampleBufferWithDescriptor:(MTLCounterSampleBufferDescriptor*)descriptor
+                                                           error:(NSError**)error
+{
+	if (error) *error = nil;
+	NSString* reason = nil;
+	MTLCounterSampleBufferError code = MTLCounterSampleBufferErrorInvalid;
+#if __LP64__
+	if (![descriptor isKindOfClass:[MTLCounterSampleBufferDescriptor class]] ||
+		![(id)descriptor.counterSet isKindOfClass:[MTLTimestampCounterSetInternal class]] ||
+		((MTLTimestampCounterSetInternal*)descriptor.counterSet).device != self ||
+		descriptor.storageMode != MTLStorageModeShared || descriptor.sampleCount == 0 ||
+		descriptor.sampleCount > UINT32_MAX || !_device->timestampCapabilities().supported()) {
+		reason = @"Counter samples require this device's supported timestamp set, shared storage and a positive uint32 sample count";
+	} else {
+		try {
+			auto buffer = _device->newTimestampSampleBuffer(descriptor.sampleCount);
+			return [[MTLCounterSampleBufferInternal alloc] initWithBuffer:buffer device:self label:descriptor.label];
+		} catch (const std::bad_alloc&) {
+			code = MTLCounterSampleBufferErrorOutOfMemory;
+			reason = @"Cannot allocate timestamp counter sample buffer";
+		} catch (const std::exception& exception) {
+			code = MTLCounterSampleBufferErrorInternal;
+			reason = [NSString stringWithUTF8String:exception.what()];
+		}
+	}
+#else
+	reason = @"Counter sampling requires the 64-bit Metal backend";
+#endif
+	if (error)
+		*error = [NSError errorWithDomain:MTLCounterErrorDomain code:code
+			userInfo:@{NSLocalizedDescriptionKey:reason}];
+	return nil;
 }
 
 - (id<MTLCommandQueue>)newCommandQueue

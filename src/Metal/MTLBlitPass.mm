@@ -4,8 +4,8 @@
 
 #if __LP64__
 
-// Limited to the current backend, which exposes no counter sets or sampling.
-// A sampling backend must provide at least device.counterSets.count slots.
+// Four slots cover the single implemented timestamp counter set.
+// Stage-boundary sampling remains unsupported.
 static const NSUInteger MTLBlitSampleAttachmentCount = 4;
 
 static void checkAttachmentIndex(NSUInteger index)
@@ -93,7 +93,7 @@ static void checkAttachmentIndex(NSUInteger index)
 	for (NSUInteger i = 0; i < MTLBlitSampleAttachmentCount; ++i) {
 		if (_attachments[i].sampleBuffer != nil)
 			[NSException raise:NSInternalInconsistencyException
-				format:@"Metal blit counter sampling is unsupported: Indium has no counter query pool or sample-buffer implementation"];
+				format:@"Metal blit pass counter sampling is unsupported: stage-boundary sampling is not implemented"];
 	}
 }
 @end

@@ -8,8 +8,17 @@
 
 #import <Metal/MTLResource.h>
 #import <Metal/MTLDefines.h>
+#import <Metal/MTLCounterSampleBuffer.h>
 
 METAL_DECLARATIONS_BEGIN
+typedef NS_ENUM(NSUInteger, MTLCounterSamplingPoint) {
+	MTLCounterSamplingPointAtStageBoundary = 0,
+	MTLCounterSamplingPointAtDrawBoundary = 1,
+	MTLCounterSamplingPointAtDispatchBoundary = 2,
+	MTLCounterSamplingPointAtTileDispatchBoundary = 3,
+	MTLCounterSamplingPointAtBlitBoundary = 4,
+};
+
 typedef NS_ENUM(NSUInteger, MTLArgumentBuffersTier) {
 	MTLArgumentBuffersTier1 = 0,
 	MTLArgumentBuffersTier2 = 1,
@@ -100,11 +109,6 @@ MTL_EXPORT void MTLRemoveDeviceObserver(id<NSObject> observer);
  the hardware that indium cannot answer, and a plausible answer would be worse
  than the error:
 
- -supportsCounterSampling: asks what the underlying GPU can do. MTLCounterSamplingPoint
- enumerates where Metal may sample counters, and indium has no query pool at all,
- so it has no sampling point to report on. It is not declared until indium can say
- something true.
-
  -supportsFamily: IS declared, and answers for Apple1 only. MTLGPUFamily is Apple's own
  numbering of silicon generations and Vulkan has no property that maps onto it --
  deviceName is a free-form string and vendorID/deviceID identify the driver, not
@@ -127,7 +131,6 @@ MTL_EXPORT void MTLRemoveDeviceObserver(id<NSObject> observer);
  -newArgumentEncoderWithArguments: in MTLArgumentDescriptor.h,
  -newCommandQueueWithMaxCommandBufferCount: in MTLCommandQueue.h,
  -newBinaryArchiveWithDescriptor:error: in MTLBinaryArchive.h,
- -newCounterSampleBufferWithDescriptor:error: in MTLCounterSampleBuffer.h, and
  the acceleration-structure selectors in MTLAccelerationStructure.h. */
 
 - (id<MTLComputePipelineState>)newComputePipelineStateWithDescriptor: (MTLComputePipelineDescriptor*)descriptor
@@ -151,6 +154,11 @@ MTL_EXPORT void MTLRemoveDeviceObserver(id<NSObject> observer);
 - (id<MTLSamplerState>)newSamplerStateWithDescriptor: (MTLSamplerDescriptor*)descriptor;
 
 - (id<MTLDepthStencilState>)newDepthStencilStateWithDescriptor: (MTLDepthStencilDescriptor*)descriptor;
+
+@property(readonly, nullable) NSArray<id<MTLCounterSet>>* counterSets;
+- (BOOL)supportsCounterSampling:(MTLCounterSamplingPoint)samplingPoint;
+- (nullable id<MTLCounterSampleBuffer>)newCounterSampleBufferWithDescriptor:(MTLCounterSampleBufferDescriptor*)descriptor
+                                                                   error:(NSError**)error;
 
 - (id<MTLCommandQueue>)newCommandQueue;
 

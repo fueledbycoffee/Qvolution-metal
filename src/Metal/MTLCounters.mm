@@ -23,3 +23,6 @@ MTLCommonCounter MTLCommonCounterRenderTargetWriteCycles = @"MTLCommonCounterRen
 MTLCommonCounterSet MTLCommonCounterSetTimestamp = @"MTLCommonCounterSetTimestamp";
 MTLCommonCounterSet MTLCommonCounterSetStageUtilization = @"MTLCommonCounterSetStageUtilization";
 MTLCommonCounterSet MTLCommonCounterSetStatistic = @"MTLCommonCounterSetStatistic";
+
+// GUESS: opaque domain spelling, matching the common-identifier policy above.
+NSString* const MTLCounterErrorDomain = @"MTLCounterErrorDomain";

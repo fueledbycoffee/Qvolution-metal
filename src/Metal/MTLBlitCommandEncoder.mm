@@ -3,6 +3,7 @@
 
 #import <Metal/MTLBlitCommandEncoderInternal.h>
 #import <Metal/MTLBufferInternal.h>
+#import <Metal/MTLCounterSampleBufferInternal.h>
 #import <Metal/MTLDevice.h>
 #import <Metal/MTLTextureInternal.h>
 #import <Metal/MTLTypesInternal.h>
@@ -190,6 +191,23 @@ destinationBytesPerImage: (NSUInteger)destinationBytesPerImage
              value: (uint8_t)value
 {
 	_encoder->fillBuffer(((MTLBufferInternal*)buffer).buffer, NSRangeToIndium(range), value);
+}
+
+- (void)sampleCountersInBuffer:(id<MTLCounterSampleBuffer>)buffer
+                atSampleIndex:(NSUInteger)index
+                  withBarrier:(BOOL)barrier
+{
+#if __LP64__
+	if (![(id)buffer isKindOfClass:[MTLCounterSampleBufferInternal class]] || buffer.device != _device)
+		[NSException raise:NSInvalidArgumentException format:@"Expected this device's timestamp counter sample buffer"];
+	try {
+		_encoder->sampleCounters(((MTLCounterSampleBufferInternal*)buffer).buffer, index, barrier);
+	} catch (const std::exception& exception) {
+		[NSException raise:NSInvalidArgumentException format:@"%s", exception.what()];
+	}
+#else
+	[NSException raise:NSInternalInconsistencyException format:@"Counter sampling requires the 64-bit Metal backend"];
+#endif
 }
 
 - (void)generateMipmapsForTexture: (id<MTLTexture>)texture

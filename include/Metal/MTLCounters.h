@@ -7,6 +7,29 @@
 
 METAL_DECLARATIONS_BEGIN
 
+@protocol MTLCounter <NSObject>
+@property(readonly, nonnull) NSString* name;
+@end
+
+@protocol MTLCounterSet <NSObject>
+@property(readonly, nonnull) NSString* name;
+@property(readonly, nonnull) NSArray<id<MTLCounter>>* counters;
+@end
+
+typedef struct __attribute__((packed)) {
+	uint64_t timestamp;
+} MTLCounterResultTimestamp;
+
+#define MTLCounterErrorValue NSUIntegerMax
+
+typedef NS_ENUM(NSInteger, MTLCounterSampleBufferError) {
+	MTLCounterSampleBufferErrorOutOfMemory = 0,
+	MTLCounterSampleBufferErrorInvalid = 1,
+	MTLCounterSampleBufferErrorInternal = 2,
+};
+
+MTL_EXPORT MTL_EXTERN NSString* const MTLCounterErrorDomain;
+
 typedef NSString* const MTLCommonCounter;
 typedef NSString* const MTLCommonCounterSet;
 

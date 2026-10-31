@@ -14,19 +14,16 @@
 
 #define MTLCounterDontSample NSUIntegerMax
 
-/**
- * Describes a counter sample buffer to allocate.
- *
- * A stored value is returned unchanged. The buffer is not provided: indium
- * declares CounterSampleBuffer with sampleCount and resolveCounterRange, but
- * nothing in it can be created, because indium has no counter set, no query
- * pool and no timestamp period to sample against.
- * -[MTLDevice newCounterSampleBufferWithDescriptor:error:] is therefore not
- * declared, so a caller reaches an unrecognised selector rather than a buffer
- * that reports a sample count and resolves to bytes it made up.
- */
-
 METAL_DECLARATIONS_BEGIN
+
+@protocol MTLDevice;
+
+@protocol MTLCounterSampleBuffer <NSObject>
+@property(readonly, nonnull) id<MTLDevice> device;
+@property(readonly, nullable) NSString* label;
+@property(readonly) NSUInteger sampleCount;
+- (nullable NSData*)resolveCounterRange:(NSRange)range;
+@end
 
 MTL_EXPORT
 @interface MTLCounterSampleBufferDescriptor : NSObject <NSCopying>

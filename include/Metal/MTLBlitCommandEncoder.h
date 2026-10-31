@@ -12,6 +12,7 @@
 
 METAL_DECLARATIONS_BEGIN
 
+@protocol MTLCounterSampleBuffer;
 @protocol MTLBuffer;
 @protocol MTLTexture;
 
@@ -23,6 +24,10 @@ typedef NS_OPTIONS(NSUInteger, MTLBlitOption) {
 };
 
 @protocol MTLBlitCommandEncoder <MTLCommandEncoder>
+
+- (void)sampleCountersInBuffer:(id<MTLCounterSampleBuffer>)sampleBuffer
+                atSampleIndex:(NSUInteger)sampleIndex
+                  withBarrier:(BOOL)barrier;
 
 - (void)copyFromBuffer: (id<MTLBuffer>)sourceBuffer
           sourceOffset: (NSUInteger)sourceOffset
